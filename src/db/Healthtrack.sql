@@ -132,3 +132,5 @@ CREATE TABLE MedicationLogs (
         FOREIGN KEY (PatientMedicationID)
         REFERENCES PatientMedications(PatientMedicationID)
 );
+
+SELECT * FROM Patients;
