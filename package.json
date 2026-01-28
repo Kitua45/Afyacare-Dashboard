@@ -1,18 +1,19 @@
 {
-  "name": "Afyacare Dashboard",
+  "name": "Afyacare-Dashboard",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "npm run build && node dist/index.js"
+    "start": "pnpm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.18.1",
   "devDependencies": {
+    "@types/node": "^25.0.10",
     "tsc": "^2.0.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
