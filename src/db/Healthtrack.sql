@@ -29,6 +29,7 @@ CREATE TABLE Patients (
     PhoneNumber NVARCHAR(20),
     CreatedAt DATETIME2 DEFAULT GETDATE()
 );
+GO
 
 /* ============================
    MEDICAL CONDITIONS
@@ -37,6 +38,7 @@ CREATE TABLE Conditions (
     ConditionID INT IDENTITY(1,1) PRIMARY KEY,
     ConditionName NVARCHAR(50) UNIQUE NOT NULL
 );
+GO
 
 /* ============================
    PATIENT CONDITION RELATION
@@ -56,6 +58,7 @@ CREATE TABLE PatientConditions (
     CONSTRAINT UQ_Patient_Condition
         UNIQUE (PatientID, ConditionID)
 );
+GO
 
 /* ============================
    VITAL TYPES
@@ -65,6 +68,7 @@ CREATE TABLE VitalTypes (
     VitalName NVARCHAR(50) NOT NULL,
     Unit NVARCHAR(20) NOT NULL
 );
+GO
 
 CREATE TABLE VitalRanges (
     RangeID INT IDENTITY(1,1) PRIMARY KEY,
@@ -77,7 +81,11 @@ CREATE TABLE VitalRanges (
     CONSTRAINT FK_VitalRanges_VitalType
         FOREIGN KEY (VitalTypeID) REFERENCES VitalTypes(VitalTypeID)
 );
+GO
 
+/* ============================
+   VITAL RECORDS
+   ============================ */
 CREATE TABLE VitalRecords (
     VitalRecordID INT IDENTITY(1,1) PRIMARY KEY,
     PatientID INT NOT NULL,
@@ -85,13 +93,18 @@ CREATE TABLE VitalRecords (
     VitalValue DECIMAL(5,2) NOT NULL,
     RecordedAt DATETIME2 DEFAULT GETDATE(),
 
+    -- Columns for automated severity and recommendation
+    Severity NVARCHAR(20),
+    SeverityColor NVARCHAR(10),
+    Recommendation NVARCHAR(150),
+
     CONSTRAINT FK_VitalRecords_Patient
         FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
 
     CONSTRAINT FK_VitalRecords_VitalType
         FOREIGN KEY (VitalTypeID) REFERENCES VitalTypes(VitalTypeID)
 );
-
+GO
 
 /* ============================
    MEDICATIONS
@@ -101,6 +114,7 @@ CREATE TABLE Medications (
     MedicationName NVARCHAR(100) NOT NULL,
     Purpose NVARCHAR(100)
 );
+GO
 
 /* ============================
    PATIENT MEDICATION SCHEDULE
@@ -118,6 +132,7 @@ CREATE TABLE PatientMedications (
     CONSTRAINT FK_PM_Medication
         FOREIGN KEY (MedicationID) REFERENCES Medications(MedicationID)
 );
+GO
 
 /* ============================
    MEDICATION INTAKE LOG
@@ -132,5 +147,59 @@ CREATE TABLE MedicationLogs (
         FOREIGN KEY (PatientMedicationID)
         REFERENCES PatientMedications(PatientMedicationID)
 );
+GO
 
+/* ============================
+   AUTO-SEVERITY & RECOMMENDATION TRIGGER
+   ============================ */
+
+/* Drop trigger if it already exists */
+IF OBJECT_ID('trg_AutoVitalAssessment', 'TR') IS NOT NULL
+    DROP TRIGGER trg_AutoVitalAssessment;
+GO
+
+CREATE TRIGGER trg_AutoVitalAssessment
+ON VitalRecords
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE vr
+    SET
+        vr.Severity =
+            CASE
+                WHEN vr.VitalValue BETWEEN r.NormalMin AND r.NormalMax THEN 'Normal'
+                WHEN vr.VitalValue BETWEEN r.WarningMin AND r.WarningMax THEN 'Warning'
+                ELSE 'Critical'
+            END,
+
+        vr.SeverityColor =
+            CASE
+                WHEN vr.VitalValue BETWEEN r.NormalMin AND r.NormalMax THEN 'Green'
+                WHEN vr.VitalValue BETWEEN r.WarningMin AND r.WarningMax THEN 'Orange'
+                ELSE 'Red'
+            END,
+
+        vr.Recommendation =
+            CASE
+                WHEN vr.VitalValue BETWEEN r.NormalMin AND r.NormalMax
+                    THEN 'All good. Continue monitoring.'
+                WHEN vr.VitalValue BETWEEN r.WarningMin AND r.WarningMax
+                    THEN 'Monitor closely and consider seeing a doctor.'
+                ELSE
+                    'Seek medical attention immediately.'
+            END
+    FROM VitalRecords vr
+    INNER JOIN inserted i
+        ON vr.VitalRecordID = i.VitalRecordID
+    INNER JOIN VitalRanges r
+        ON vr.VitalTypeID = r.VitalTypeID;
+END;
+GO
+
+
+/* ============================
+   TEST QUERY
+   ============================ */
 SELECT * FROM Patients;

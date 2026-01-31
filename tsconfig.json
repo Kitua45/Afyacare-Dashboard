@@ -1,32 +1,28 @@
 {
   "compilerOptions": {
     /* Project Structure */
-    "rootDir": "src",
-    "outDir": "dist",
+    "rootDir": "src",           // Your source folder
+    "outDir": "dist",           // Compiled JS output
 
     /* Language & Environment */
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
-
-    /* Output */
-    "sourceMap": true,
+    "target": "ES2020",         // Modern JS output
+    "module": "commonjs",       // Node-friendly modules
+    "moduleResolution": "node", // Standard Node module resolution
+    "lib": ["ES2020", "DOM"],   // Include standard libraries
 
     /* Type Safety */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "strict": true,                     // Enable all strict checks
+    "noUncheckedIndexedAccess": true,   // Catch undefined array/index accesses
+    "exactOptionalPropertyTypes": true, // Exact handling of optional types
 
-    /* Module Safety */
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
+    /* Output & Debug */
+    "sourceMap": true,            // Enable sourcemaps for debugging
+    "esModuleInterop": true,      // Allows default imports from commonjs modules
 
     /* Performance */
-    "skipLibCheck": true
+    "skipLibCheck": true,         // Skip type checks of external libraries
+    "forceConsistentCasingInFileNames": true // Avoid path casing issues
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],             // All TS files in src
+  "exclude": ["node_modules", "dist"] // Exclude compiled JS & dependencies
 }
